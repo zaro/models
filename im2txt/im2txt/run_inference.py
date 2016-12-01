@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import math
 import os
+import json
 
 
 import tensorflow as tf
@@ -38,6 +39,8 @@ tf.flags.DEFINE_string("vocab_file", "", "Text file containing the vocabulary.")
 tf.flags.DEFINE_string("input_files", "",
                        "File pattern or comma-separated list of file patterns "
                        "of image files.")
+tf.flags.DEFINE_string("json_output", "",
+                       "File to write json output to")
 
 
 def main(_):
@@ -66,18 +69,27 @@ def main(_):
     # beam search parameters. See caption_generator.py for a description of the
     # available beam search parameters.
     generator = caption_generator.CaptionGenerator(model, vocab)
+    jsonOut = {}
 
     for filename in filenames:
       with tf.gfile.GFile(filename, "r") as f:
         image = f.read()
       captions = generator.beam_search(sess, image)
+      jsonCaptions = []
       print("Captions for image %s:" % os.path.basename(filename))
       for i, caption in enumerate(captions):
         # Ignore begin and end words.
-        sentence = [vocab.id_to_word(w) for w in caption.sentence[1:-1]]
-        sentence = " ".join(sentence)
+        words = [vocab.id_to_word(w) for w in caption.sentence[1:-1]]
+        sentence = " ".join(words)
+        jsonCaptions.append({
+            "caption":  sentence,
+            "words": words,
+        })
         print("  %d) %s (p=%f)" % (i, sentence, math.exp(caption.logprob)))
-
+      jsonOut[filename] = jsonCaptions
+    if FLAGS.json_output:
+        with open(FLAGS.json_output, "w") as f:
+            json.dump(jsonOut, f)
 
 if __name__ == "__main__":
   tf.app.run()
