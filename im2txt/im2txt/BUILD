@@ -1,5 +1,7 @@
 package(default_visibility = [":internal"])
 
+load("@bazel_tools//tools/build_defs/pkg:pkg.bzl", "pkg_tar", "pkg_deb")
+
 licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
@@ -92,5 +94,33 @@ py_binary(
         ":inference_wrapper",
         "//im2txt/inference_utils:caption_generator",
         "//im2txt/inference_utils:vocabulary",
+    ],
+)
+
+pkg_tar(
+    name = "im2txt_inference_utils",
+    extension = "tar.gz",
+    package_dir = 'im2txt/inference_utils',
+    files = [
+	"//im2txt/inference_utils:caption_generator",
+  	"//im2txt/inference_utils:inference_wrapper_base",
+	"//im2txt/inference_utils:vocabulary",
+    ],
+)
+pkg_tar(
+    name = "im2txt_dist",
+    extension = "tar.gz",
+    files = [
+        ":build_mscoco_data",
+        ":download_and_preprocess_mscoco",
+	":configuration",
+	":show_and_tell_model",
+	":inference_wrapper",
+	":train",
+	":evaluate",
+	":run_inference",
+    ],
+    deps = [
+	"im2txt_inference_utils",
     ],
 )
