@@ -24,6 +24,9 @@
 #  ./download_and_preprocess_mscoco.sh
 set -e
 
+CACHE_DIR=/opt/_cache
+mkdir -p ${CACHE_DIR}
+
 if [ -z "$1" ]; then
   echo "usage download_and_preproces_mscoco.sh [data dir]"
   exit
@@ -48,14 +51,14 @@ function download_and_unzip() {
   local BASE_URL=${1}
   local FILENAME=${2}
 
-  if [ ! -f ${FILENAME} ]; then
-    echo "Downloading ${FILENAME} to $(pwd)"
-    wget -nd -c "${BASE_URL}/${FILENAME}"
+  if [ ! -f ${CACHE_DIR}/${FILENAME} ]; then
+    echo "Downloading ${FILENAME} to ${CACHE_DIR}"
+    aria2c --summary-interval=0 -x 10 -s 10 -d "${CACHE_DIR}" "${BASE_URL}/${FILENAME}"
   else
     echo "Skipping download of ${FILENAME}"
   fi
   echo "Unzipping ${FILENAME}"
-  ${UNZIP} ${FILENAME}
+  ${UNZIP} ${CACHE_DIR}/${FILENAME}
 }
 
 cd ${SCRATCH_DIR}
